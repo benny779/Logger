@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO.Pipes;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,9 +15,8 @@ namespace Logging
         private bool _enabled = true;
         private string _timeFormat = "yyyy-MM-dd HH:mm:ss:fff"; //It should also be updated in the SetTimeFormat summary
         private bool _parallelismEnabled = true;
-        // TODO: support history limit
         private bool _logHistoryEnabled = false;
-        private List<string> _logs;
+        private LimitedList<string> _logs;
 
         /// <summary>
         /// Creates a new instance of the <see cref="Logger"/> class.
@@ -241,10 +239,10 @@ namespace Logging
         /// Enable log history. All formatted logs messages will be saved.
         /// </summary>
         /// <returns></returns>
-        public Logger EnableLogHistory()
+        public Logger EnableLogHistory(int historyCapacity = 1000)
         {
             if (_logs is null)
-                _logs = new List<string>();
+                _logs = new LimitedList<string>(historyCapacity);
 
             _logHistoryEnabled = true;
             return this;

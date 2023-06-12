@@ -46,6 +46,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Helper.cs" />
+    <Compile Include="LimitedList.cs" />
     <Compile Include="LogEntry.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="ILogger.cs" />
