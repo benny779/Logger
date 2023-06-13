@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.IO;
@@ -216,6 +217,15 @@ namespace Logging
             LogLevel = level;
             Validate();
         }
+        /// <summary>
+        /// Creates a new instance of the <see cref="TargetDatabase"/> class.
+        /// </summary>
+        /// <param name="targetIdentifier"></param>
+        /// <param name="dbConnection">A connection to get the ConnectionString from.</param>
+        /// <param name="level">Minimum severity level.</param>
+        public TargetDatabase(string targetIdentifier, IDbConnection dbConnection, LogLevel level = LogLevel.Warn)
+            : this(targetIdentifier, dbConnection.ConnectionString, level)
+        { }
 
         private void Validate()
         {
