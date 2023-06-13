@@ -274,6 +274,25 @@ namespace Logging
             catch { }
         }
 
+
+        /// <summary>
+        /// Returns the DDL for the log table.
+        /// </summary>
+        /// <returns></returns>
+        public static string GetLogTableDDL() => @"
+CREATE TABLE dbo.LogEntries
+(
+	LogEntriesID	int				PRIMARY KEY IDENTITY(1, 1),
+	App				varchar(64)		NULL,
+	Machine			varchar(64)		NULL,
+	Username		varchar(64)		NULL,
+	Timestamp		datetime2		NULL,
+	Level			varchar(32)		NULL,
+	Category		varchar(64)		NULL,
+	Message			varchar(MAX)	NULL
+)";
+
+
         /// <inheritdoc cref="Target.ToString"/>
         public override string ToString()
         {

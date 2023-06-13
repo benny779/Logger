@@ -16,9 +16,7 @@ namespace LoggerTester
                 .AddTarget(new TargetFile("File") { MaxFileSizeBytes = 100, MaxFilesLines = 20 })
                 .AddTarget(new TargetEventViewer("EventViewer"));
 
-            var logger2 = Logger.GetLogger();
-
-            logger2.AddTarget(new TargetDatabase("DB", @"Data Source=lansql05;Initial Catalog=laniado;"));
+            Console.WriteLine(TargetDatabase.GetLogTableDDL());
 
             for (int i = 1; i < 18; i++)
             {

@@ -9,8 +9,8 @@ namespace Logging
         public LogLevel Level;
         public object Message;
 
-        internal string formattedMessage = null;
-        internal string fullFormattedMessage = null;
+        internal string formattedMessage;
+        internal string fullFormattedMessage;
 
         public LogEntry(object message, LogLevel level)
         {
