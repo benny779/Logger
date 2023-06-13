@@ -5,7 +5,7 @@ namespace Logging
 {
     internal class LimitedList<T> : Collection<T>
     {
-        private int _capacity;
+        private readonly int _capacity;
 
         public LimitedList(int capacity)
         {

@@ -50,18 +50,45 @@ namespace Logging
     {
         private readonly string logFilePath;
         private readonly string logFileName;
-        // TODO: limit file size
-        //public int MaxFileSize { get; set; }
-        //public int MaxFilesLines { get; set; }
-
         private string LogFileFullPath => Path.Combine(logFilePath, logFileName ?? $"{DateTime.Today:yyyy-MM-dd}.log");
+
+
+        /// <summary>
+        /// Maximum log file size in bytes.
+        /// </summary>
+        public long MaxFileSizeBytes
+        {
+            get => maxFileSizeBytes; set
+            {
+                if (value < 1)
+                    throw new ArgumentOutOfRangeException(nameof(MaxFileSizeBytes));
+
+                maxFileSizeBytes = value;
+            }
+        }
+        private long maxFileSizeBytes;
+
+        /// <summary>
+        /// Maximum number of lines.
+        /// </summary>
+        public int MaxFilesLines
+        {
+            get => maxFileSize; set
+            {
+                if (value < 1)
+                    throw new ArgumentOutOfRangeException(nameof(MaxFilesLines));
+
+                maxFileSize = value;
+            }
+        }
+        private int maxFileSize;
 
         /// <summary>
         /// Creates a new instance of the <see cref="TargetFile"/> class.
         /// </summary>
         /// <param name="targetIdentifier"></param>
         /// <param name="logFilePath">If null, will be set to <see cref="Directory.GetCurrentDirectory"/>.</param>
-        /// <param name="logFileName">If null, will be set to the current day<./param>
+        /// <param name="logFileName">If null, will be set to the current day.</param>
         /// <param name="level">Minimum severity level.</param>
         /// <exception cref="ArgumentException"></exception>
         /// <exception cref="ArgumentNullException"></exception>
@@ -77,6 +104,9 @@ namespace Logging
 
         internal override void Log(LogEntry entry)
         {
+            if (MaxFilesLines + MaxFileSizeBytes > 0)
+                FileMaintenance();
+
             try
             {
                 using (var writer = File.AppendText(LogFileFullPath))
@@ -84,6 +114,82 @@ namespace Logging
             }
             catch { }
         }
+
+
+        #region FileMaintenance
+        private void FileMaintenance()
+        {
+            bool wasMaintenance = false;
+
+            if (MaxFilesLines > 0)
+                wasMaintenance = FileMaintenanceByLines(LogFileFullPath, MaxFilesLines);
+
+            if (!wasMaintenance && MaxFileSizeBytes > 0)
+                FileMaintenanceByBytes(LogFileFullPath, MaxFileSizeBytes);
+        }
+
+        private static bool FileMaintenanceByLines(string filePath, int maxLines)
+        {
+            try
+            {
+                var linesInFile = File.Exists(filePath)
+                    ? File.ReadAllLines(filePath).Length
+                    : 0;
+
+                if (linesInFile > maxLines - 1)
+                    return ArchiveFile(filePath);
+
+            }
+            catch { }
+
+            return false;
+        }
+        private static bool FileMaintenanceByBytes(string filePath, long maxBytes)
+        {
+            try
+            {
+                var fileInfo = new FileInfo(filePath);
+                var fileSize = fileInfo.Exists ? fileInfo.Length : 0;
+
+                if (fileSize > maxBytes)
+                    return ArchiveFile(filePath);
+            }
+            catch { }
+
+            return false;
+        }
+        private static string GetNextFileName(string filePath)
+        {
+            if (!File.Exists(filePath)) return filePath;
+
+            var file = new FileInfo(filePath);
+            var dirPath = file.DirectoryName;
+            var fileName = Path.GetFileNameWithoutExtension(file.Name);
+            var fileExt = file.Extension;
+
+            var count = Directory.GetFiles(dirPath, $"{fileName}*{fileExt}").Length;
+            var newFileName = $"{fileName}_{count.ToString().PadLeft(3, '0')}{fileExt}";
+            var newFilePath = Path.Combine(dirPath, newFileName);
+
+            return newFilePath;
+        }
+        private static bool ArchiveFile(string filePath)
+        {
+            try
+            {
+                var nextFilePath = GetNextFileName(filePath);
+                if (File.Exists(nextFilePath))
+                    File.Delete(nextFilePath);
+
+                File.Move(filePath, nextFilePath);
+                return true;
+            }
+            catch { }
+
+            return false;
+        }
+        #endregion
+
 
         /// <inheritdoc cref="Target.ToString"/>
         public override string ToString() => $"{targetIdentifier}: {LogFileFullPath}";

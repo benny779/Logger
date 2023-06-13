@@ -13,7 +13,7 @@ namespace Logging
     {
         private readonly Dictionary<string, Target> _targets = new Dictionary<string, Target>();
         private bool _enabled = true;
-        private string _timeFormat = "yyyy-MM-dd HH:mm:ss:fff"; //It should also be updated in the SetTimeFormat summary
+        private string _timeFormat = "yyyy-MM-dd HH:mm:ss.fff"; //It should also be updated in the SetTimeFormat summary
         private bool _parallelismEnabled = true;
         private bool _logHistoryEnabled = false;
         private LimitedList<string> _logs;
@@ -75,7 +75,7 @@ namespace Logging
             string levelString = entry.Level.GetShortName();
             string messageString = entry.formattedMessage ?? GetMessageStringInternal(entry.Message);
 
-            return $"{timestamp} {levelString} {messageString}";
+            return $"{timestamp} [{levelString}] {messageString}";
         }
         private string GetMessageStringInternal(object message)
         {
@@ -208,7 +208,7 @@ namespace Logging
         /// <summary>
         /// Specifies the time format for logging.
         /// </summary>
-        /// <remarks>Default format is <c>"yyyy-MM-dd HH:mm:ss:fff"</c>.</remarks>
+        /// <remarks>Default format is <c>"yyyy-MM-dd HH:mm:ss.fff"</c>.</remarks>
         /// <param name="format"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException"></exception>
@@ -222,7 +222,7 @@ namespace Logging
         /// <summary>
         /// Specifies the time format for logging.
         /// </summary>
-        /// <remarks>Default format is <c>"yyyy-MM-dd HH:mm:ss:fff"</c>.</remarks>
+        /// <remarks>Default format is <c>"yyyy-MM-dd HH:mm:ss.fff"</c>.</remarks>
         /// <param name="formatBuilder"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException"></exception>
@@ -238,6 +238,7 @@ namespace Logging
         /// <summary>
         /// Enable log history. All formatted logs messages will be saved.
         /// </summary>
+        /// <param name="historyCapacity"></param>
         /// <returns></returns>
         public Logger EnableLogHistory(int historyCapacity = 1000)
         {

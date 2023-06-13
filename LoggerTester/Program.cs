@@ -13,8 +13,13 @@ namespace LoggerTester
             var logger = new Logger().EnableParallelism()
                 .AddTarget(new TargetConsole("Console"))
                 .AddTarget(new TargetTrace("Trace"))
-                .AddTarget(new TargetFile("File"))
+                .AddTarget(new TargetFile("File") { MaxFileSizeBytes = 100, MaxFilesLines = 20 })
                 .AddTarget(new TargetEventViewer("EventViewer"));
+
+            for (int i = 1; i < 18; i++)
+            {
+                logger.Info(i);
+            }
 
             //logger.SetTargetLogLevel("EventViewer", LogLevel.Info);
             logger.EnableLogHistory();
