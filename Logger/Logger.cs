@@ -11,6 +11,8 @@ namespace Logging
     /// </summary>
     public class Logger : ILogger
     {
+        private static readonly Logger _instance = new Logger();
+
         private readonly Dictionary<string, Target> _targets = new Dictionary<string, Target>();
         private bool _enabled = true;
         private string _timeFormat = "yyyy-MM-dd HH:mm:ss.fff"; //It should also be updated in the SetTimeFormat summary
@@ -18,11 +20,14 @@ namespace Logging
         private bool _logHistoryEnabled = false;
         private LimitedList<string> _logs;
 
+        private Logger() { }
+
         /// <summary>
-        /// Creates a new instance of the <see cref="Logger"/> class.
+        /// Returns an instance of the <see cref="Logger"/> class.
         /// </summary>
         /// <remarks>By default there are no targets. Use <see cref="AddTarget(Target)"/> to add.</remarks>
-        public Logger() { }
+        /// <returns></returns>
+        public static Logger GetLogger() => _instance;
 
 
         /// <inheritdoc cref="ILogger.Debug(object)"/>

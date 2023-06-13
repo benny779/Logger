@@ -10,11 +10,15 @@ namespace LoggerTester
     {
         public static void Main(string[] args)
         {
-            var logger = new Logger().EnableParallelism()
+            var logger = Logger.GetLogger().EnableParallelism()
                 .AddTarget(new TargetConsole("Console"))
                 .AddTarget(new TargetTrace("Trace"))
                 .AddTarget(new TargetFile("File") { MaxFileSizeBytes = 100, MaxFilesLines = 20 })
                 .AddTarget(new TargetEventViewer("EventViewer"));
+
+            var logger2 = Logger.GetLogger();
+
+            logger2.AddTarget(new TargetDatabase("DB", @"Data Source=lansql05;Initial Catalog=laniado;"));
 
             for (int i = 1; i < 18; i++)
             {
