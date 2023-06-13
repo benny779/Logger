@@ -3,6 +3,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.IO;
+using System.Net.Mail;
 
 namespace Logging
 {
@@ -386,8 +387,8 @@ CREATE TABLE dbo.LogEntries
     /// </summary>
     public class TargetEmail : Target
     {
-        private readonly string SmtpServer;
-        private readonly int SmtpPort;
+        private readonly SmtpClient _smtpClient;
+        private readonly MailMessage _mailMessage;
 
         /// <summary>
         /// Creates a new instance of the <see cref="TargetEmail"/> class.
@@ -395,34 +396,83 @@ CREATE TABLE dbo.LogEntries
         /// <param name="targetIdentifier"></param>
         /// <param name="smtpServer"></param>
         /// <param name="smtpPort"></param>
+        /// <param name="from"></param>
+        /// <param name="recipients">Multiple email addresses must be separated with a comma (",").</param>
         /// <param name="level">Minimum severity level.</param>
         /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="NotImplementedException"></exception>
-        public TargetEmail(string targetIdentifier, string smtpServer, int smtpPort, LogLevel level = LogLevel.Critical) : base(targetIdentifier)
-        {
-            // TODO: implement TargetEmail
-            throw new NotImplementedException();
+        /// <exception cref="ArgumentOutOfRangeException"></exception>
+        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="FormatException"></exception>
+        public TargetEmail(string targetIdentifier, string smtpServer, int smtpPort, MailAddress from, string recipients, LogLevel level = LogLevel.Critical)
+            : this(targetIdentifier,
+                 new SmtpClient(smtpServer, smtpPort),
+                 new MailMessage(from, new MailAddress(recipients)),
+                 level)
+        { }
 
-            SmtpServer = smtpServer;
-            SmtpPort = smtpPort;
+        /// <summary>
+        /// Creates a new instance of the <see cref="TargetEmail"/> class.
+        /// </summary>
+        /// <param name="targetIdentifier"></param>
+        /// <param name="smtpClient"></param>
+        /// <param name="from"></param>
+        /// <param name="recipients">Multiple email addresses must be separated with a comma (",").</param>
+        /// <param name="level">Minimum severity level.</param>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="FormatException"></exception>
+        public TargetEmail(string targetIdentifier, SmtpClient smtpClient, MailAddress from, string recipients, LogLevel level = LogLevel.Critical)
+            : this(targetIdentifier,
+                   smtpClient,
+                   new MailMessage(from, new MailAddress(recipients)),
+                   level)
+        { }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="TargetEmail"/> class.
+        /// </summary>
+        /// <param name="targetIdentifier"></param>
+        /// <param name="smtpClient"></param>
+        /// <param name="mailMessage"></param>
+        /// <param name="level">Minimum severity level.</param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public TargetEmail(string targetIdentifier, SmtpClient smtpClient, MailMessage mailMessage, LogLevel level = LogLevel.Critical)
+            : base(targetIdentifier)
+        {
+            _smtpClient = smtpClient;
+            _mailMessage = mailMessage;
             LogLevel = level;
             Validate();
         }
 
         private void Validate()
         {
-            Helper.ThrowIfNullOrEmpty(SmtpServer, nameof(SmtpServer));
+            if (_smtpClient is null)
+                throw new InvalidOperationException("Invalid SmtpClient.");
 
-            if (SmtpPort < 1 || SmtpPort > 65535)
-                throw new ArgumentOutOfRangeException(nameof(SmtpPort));
+            if (_mailMessage is null)
+                throw new InvalidOperationException("Invalid MailMessage.");
+
+            if (_mailMessage.From is null)
+                throw new InvalidOperationException("A from address must be specified.");
+
+            if (_mailMessage.To.Count < 1)
+                throw new InvalidOperationException("A recipient must be specified.");
         }
 
         internal override void Log(LogEntry entry)
         {
-            throw new NotImplementedException();
+            _mailMessage.Subject = $"{General.AppName} | {entry.Level}";
+            _mailMessage.Priority = entry.Level >= LogLevel.Error ? MailPriority.High : MailPriority.Normal;
+            _mailMessage.Body = entry.formattedMessage;
+
+            try
+            {
+                _smtpClient.Send(_mailMessage);
+            }
+            catch { }
         }
 
         /// <inheritdoc cref="Target.ToString"/>
-        public override string ToString() => $"{targetIdentifier}: {SmtpServer}:{SmtpPort}";
+        public override string ToString() => $"{targetIdentifier}: {_smtpClient.Host}:{_smtpClient.Port}";
     }
 }

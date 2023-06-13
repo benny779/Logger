@@ -1,8 +1,6 @@
 ﻿using Logging;
 using System;
-using System.Data.SqlClient;
 using System.Linq;
-using System.Net.Mail;
 
 namespace LoggerTester
 {
@@ -15,13 +13,6 @@ namespace LoggerTester
                 .AddTarget(new TargetTrace("Trace"))
                 .AddTarget(new TargetFile("File") { MaxFileSizeBytes = 100, MaxFilesLines = 20 })
                 .AddTarget(new TargetEventViewer("EventViewer"));
-
-            Console.WriteLine(TargetDatabase.GetLogTableDDL());
-
-            for (int i = 1; i < 18; i++)
-            {
-                logger.Info(i);
-            }
 
             //logger.SetTargetLogLevel("EventViewer", LogLevel.Info);
             logger.EnableLogHistory();
