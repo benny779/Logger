@@ -45,6 +45,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="General.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="LimitedList.cs" />
     <Compile Include="LogEntry.cs" />

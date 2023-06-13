@@ -261,9 +261,9 @@ namespace Logging
                 using (var connection = new SqlConnection(connectionString))
                 {
                     var command = new SqlCommand("INSERT INTO LogEntries (App, Machine, Username, Timestamp, Level, Category, Message) VALUES (@App, @Machine, @Username, @Timestamp, @Level, @Category, @Message)", connection);
-                    command.Parameters.AddWithValue("@App", entry.AppName);
-                    command.Parameters.AddWithValue("@Machine", entry.MachineName);
-                    command.Parameters.AddWithValue("@Username", entry.UserName);
+                    command.Parameters.AddWithValue("@App", General.AppName);
+                    command.Parameters.AddWithValue("@Machine", General.MachineName);
+                    command.Parameters.AddWithValue("@Username", General.UserName);
                     command.Parameters.AddWithValue("@Timestamp", entry.Timestamp);
                     command.Parameters.AddWithValue("@Level", entry.Level.ToString());
                     command.Parameters.AddWithValue("@Message", entry.formattedMessage);
@@ -304,7 +304,7 @@ namespace Logging
             {
                 using (var eventLog = new EventLog("Application"))
                 {
-                    eventLog.Source = entry.AppName;
+                    eventLog.Source = General.AppName;
                     eventLog.WriteEntry(entry.formattedMessage, entry.Level.GetEventLogEntryType());
                 }
             }
