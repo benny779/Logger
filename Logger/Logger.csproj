@@ -35,6 +35,12 @@
     <DocumentationFile>bin\Release\Logger.xml</DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>LoggerAssemblyKey.pfx</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -52,8 +58,19 @@
     <Compile Include="Logger.cs" />
     <Compile Include="ILogger.cs" />
     <Compile Include="LogLevel.cs" />
+    <Compile Include="MessageParser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Target.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="LoggerAssemblyKey.pfx" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>if $(ConfigurationName) == Release (
+echo Release - K:\Benny\Logger\$(TargetFileName)
+copy $(TargetPath) K:\Benny\Logger\$(TargetFileName) /y
+copy $(TargetDir)$(TargetName).xml K:\Benny\Logger\$(TargetName).xml /y
+)</PostBuildEvent>
+  </PropertyGroup>
 </Project>

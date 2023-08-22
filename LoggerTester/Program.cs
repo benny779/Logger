@@ -1,6 +1,8 @@
 ﻿using Logging;
 using System;
+using System.Data.SqlClient;
 using System.Linq;
+using System.Text;
 
 namespace LoggerTester
 {
@@ -8,6 +10,8 @@ namespace LoggerTester
     {
         public static void Main(string[] args)
         {
+            //TestSqlCommand();
+
             var logger = Logger.GetLogger().EnableParallelism()
                 .AddTarget(new TargetConsole("Console"))
                 .AddTarget(new TargetTrace("Trace"))
@@ -64,5 +68,17 @@ namespace LoggerTester
                 .Select(s => s[random.Next(s.Length)])
                 .ToArray());
         }
+
+        //private static void TestSqlCommand()
+        //{
+        //    var cmd = new SqlCommand();
+        //    cmd.CommandType = System.Data.CommandType.Text;
+        //    cmd.CommandText = "select min_teur from dbo.k_min km where km.k_min = @k_min or km.k_min = @k_min2";
+        //    cmd.Parameters.Add("@k_min", System.Data.SqlDbType.TinyInt).Value = 1;
+        //    cmd.Parameters.Add("@k_min2", System.Data.SqlDbType.TinyInt).Value = 2;
+
+        //}
+
+
     }
 }

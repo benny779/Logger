@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Logging
@@ -19,6 +18,7 @@ namespace Logging
         private bool _parallelismEnabled = true;
         private bool _logHistoryEnabled = false;
         private LimitedList<string> _logs;
+        private IMessageParser _messageParser = new MessageParser();
 
         private Logger() { }
 
@@ -28,6 +28,18 @@ namespace Logging
         /// <remarks>By default there are no targets. Use <see cref="AddTarget(Target)"/> to add.</remarks>
         /// <returns></returns>
         public static Logger GetLogger() => _instance;
+
+        /// <summary>
+        /// <inheritdoc cref="GetLogger()"/>
+        /// </summary>
+        /// <param name="messageParser"></param>
+        /// <remarks><inheritdoc cref="GetLogger()"/></remarks>
+        /// <returns></returns>
+        public static Logger GetLogger(IMessageParser messageParser)
+        {
+            _instance._messageParser = messageParser;
+            return _instance;
+        }
 
 
         /// <inheritdoc cref="ILogger.Debug(object)"/>
@@ -71,37 +83,16 @@ namespace Logging
 
         private void FormatLogEntryMessage(LogEntry entry)
         {
-            entry.formattedMessage = GetMessageStringInternal(entry.Message);
+            entry.formattedMessage = _messageParser.Parse(entry.Message);
             entry.fullFormattedMessage = GetMessageString(entry);
         }
         private string GetMessageString(LogEntry entry)
         {
             string timestamp = entry.Timestamp.ToString(_timeFormat);
             string levelString = entry.Level.GetShortName();
-            string messageString = entry.formattedMessage ?? GetMessageStringInternal(entry.Message);
+            string messageString = entry.formattedMessage ?? _messageParser.Parse(entry.Message);
 
             return $"{timestamp} [{levelString}] {messageString}";
-        }
-        private string GetMessageStringInternal(object message)
-        {
-            if (message is null)
-                return string.Empty;
-
-            if (message is Exception ex)
-            {
-                var exMessages = new StringBuilder();
-                exMessages.AppendLine(ex.Message);
-
-                while (ex.InnerException != null)
-                {
-                    ex = ex.InnerException;
-                    exMessages.AppendLine(ex.Message);
-                }
-
-                return exMessages.ToString();
-            }
-
-            return message.ToString();
         }
 
 
