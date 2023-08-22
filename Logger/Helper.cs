@@ -8,7 +8,7 @@ namespace Logging
     {
         public static void ThrowIfNull<T>(this T obj, string paramName) where T : class
         {
-            if (obj == null)
+            if (obj is null)
                 throw new ArgumentNullException(paramName);
         }
 
@@ -16,6 +16,12 @@ namespace Logging
         {
             if (string.IsNullOrEmpty(value))
                 throw new ArgumentNullException(paramName);
+        }
+
+        public static void ThrowIfEmpty(string value, string paramName)
+        {
+            if (value == string.Empty)
+                throw new ArgumentEmptyException(paramName, $"{paramName} cannot be empty.");
         }
     }
 

@@ -51,8 +51,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CustomExceptions.cs" />
     <Compile Include="General.cs" />
     <Compile Include="Helper.cs" />
+    <Compile Include="IMessageParser.cs" />
     <Compile Include="LimitedList.cs" />
     <Compile Include="LogEntry.cs" />
     <Compile Include="Logger.cs" />

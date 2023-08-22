@@ -95,8 +95,7 @@ namespace Logging
         /// <exception cref="ArgumentNullException"></exception>
         public TargetFile(string targetIdentifier, string logFilePath = null, string logFileName = null, LogLevel level = LogLevel.Info) : base(targetIdentifier)
         {
-            if (logFilePath == string.Empty)
-                throw new ArgumentException($"{nameof(logFilePath)} cannot be empty.");
+            Helper.ThrowIfEmpty(logFilePath, nameof(logFilePath));
 
             this.logFilePath = logFilePath ?? Directory.GetCurrentDirectory();
             this.logFileName = logFileName;
@@ -229,8 +228,7 @@ namespace Logging
 
         private void Validate()
         {
-            if (string.IsNullOrEmpty(connectionString))
-                throw new ArgumentNullException(nameof(connectionString));
+            Helper.ThrowIfNullOrEmpty(connectionString, nameof(connectionString));
 
             connectionString = ValidateConnectionString(connectionString);
         }
