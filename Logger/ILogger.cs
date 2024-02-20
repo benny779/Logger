@@ -1,7 +1,7 @@
 ﻿namespace Logging
 {
     /// <summary>
-    /// Represents a type used to performe logging.
+    /// Represents a type used to perform logging.
     /// </summary>
     public interface ILogger
     {

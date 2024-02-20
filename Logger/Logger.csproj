@@ -51,7 +51,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CustomExceptions.cs" />
+    <Compile Include="CustomExceptions\ArgumentEmptyException.cs" />
+    <Compile Include="Extensions.cs" />
     <Compile Include="General.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="IMessageParser.cs" />

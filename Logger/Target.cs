@@ -17,19 +17,19 @@ namespace Logging
         /// </summary>
         public LogLevel LogLevel;
 
-        internal string targetIdentifier;
-        internal bool enabled = true;
+        internal string TargetIdentifier;
+        internal bool Enabled = true;
 
         /// <summary>
         /// Creates a new instance of the <see cref="Target"/>.
         /// </summary>
         /// <param name="targetIdentifier"></param>
         /// <exception cref="ArgumentNullException"></exception>
-        public Target(string targetIdentifier)
+        protected Target(string targetIdentifier)
         {
             Helper.ThrowIfNullOrEmpty(targetIdentifier, nameof(targetIdentifier));
 
-            this.targetIdentifier = targetIdentifier;
+            this.TargetIdentifier = targetIdentifier;
         }
 
 
@@ -40,7 +40,7 @@ namespace Logging
         internal abstract void Log(LogEntry entry);
 
         /// <inheritdoc cref="object.ToString"/>
-        public override string ToString() => $"{targetIdentifier}";
+        public override string ToString() => $"{TargetIdentifier}";
     }
 
 
@@ -49,9 +49,9 @@ namespace Logging
     /// </summary>
     public class TargetFile : Target
     {
-        private readonly string logFilePath;
-        private readonly string logFileName;
-        private string LogFileFullPath => Path.Combine(logFilePath, logFileName ?? $"{DateTime.Today:yyyy-MM-dd}.log");
+        private readonly string _logFilePath;
+        private readonly string _logFileName;
+        private string LogFileFullPath => Path.Combine(_logFilePath, _logFileName ?? $"{DateTime.Today:yyyy-MM-dd}.log");
 
 
         /// <summary>
@@ -59,30 +59,30 @@ namespace Logging
         /// </summary>
         public long MaxFileSizeBytes
         {
-            get => maxFileSizeBytes; set
+            get => _maxFileSizeBytes; set
             {
                 if (value < 1)
                     throw new ArgumentOutOfRangeException(nameof(MaxFileSizeBytes));
 
-                maxFileSizeBytes = value;
+                _maxFileSizeBytes = value;
             }
         }
-        private long maxFileSizeBytes;
+        private long _maxFileSizeBytes;
 
         /// <summary>
         /// Maximum number of lines.
         /// </summary>
         public int MaxFilesLines
         {
-            get => maxFileSize; set
+            get => _maxFileSize; set
             {
                 if (value < 1)
                     throw new ArgumentOutOfRangeException(nameof(MaxFilesLines));
 
-                maxFileSize = value;
+                _maxFileSize = value;
             }
         }
-        private int maxFileSize;
+        private int _maxFileSize;
 
         /// <summary>
         /// Creates a new instance of the <see cref="TargetFile"/> class.
@@ -97,9 +97,12 @@ namespace Logging
         {
             Helper.ThrowIfEmpty(logFilePath, nameof(logFilePath));
 
-            this.logFilePath = logFilePath ?? Directory.GetCurrentDirectory();
-            this.logFileName = logFileName;
+            this._logFilePath = logFilePath ?? Directory.GetCurrentDirectory();
+            this._logFileName = logFileName;
             LogLevel = level;
+            
+            if (!Directory.Exists(this._logFilePath))
+                Directory.CreateDirectory(this._logFilePath);
         }
 
         internal override void Log(LogEntry entry)
@@ -110,9 +113,12 @@ namespace Logging
             try
             {
                 using (var writer = File.AppendText(LogFileFullPath))
-                    writer.WriteLine(entry.fullFormattedMessage);
+                    writer.WriteLine(entry.FullFormattedMessage);
             }
-            catch { }
+            catch
+            {
+                // ignored
+            }
         }
 
 
@@ -140,10 +146,15 @@ namespace Logging
                     return ArchiveFile(filePath);
 
             }
-            catch { }
+            catch
+            {
+                // ignored
+            }
 
             return false;
         }
+
+        // ReSharper disable once UnusedMethodReturnValue.Local
         private static bool FileMaintenanceByBytes(string filePath, long maxBytes)
         {
             try
@@ -154,7 +165,10 @@ namespace Logging
                 if (fileSize > maxBytes)
                     return ArchiveFile(filePath);
             }
-            catch { }
+            catch
+            {
+                // ignored
+            }
 
             return false;
         }
@@ -184,7 +198,10 @@ namespace Logging
                 File.Move(filePath, nextFilePath);
                 return true;
             }
-            catch { }
+            catch
+            {
+                // ignored
+            }
 
             return false;
         }
@@ -192,7 +209,7 @@ namespace Logging
 
 
         /// <inheritdoc cref="Target.ToString"/>
-        public override string ToString() => $"{targetIdentifier}: {LogFileFullPath}";
+        public override string ToString() => $"{TargetIdentifier}: {LogFileFullPath}";
     }
 
     /// <summary>
@@ -200,8 +217,8 @@ namespace Logging
     /// </summary>
     public class TargetDatabase : Target
     {
-        private const int SQLCONNECTION_DEFAULT_TIMEOUT = 2;
-        private string connectionString;
+        private const int SqlConnectionDefaultTimeout = 2;
+        private string _connectionString;
 
         /// <summary>
         /// Creates a new instance of the <see cref="TargetDatabase"/> class.
@@ -212,7 +229,7 @@ namespace Logging
         /// <exception cref="ArgumentNullException"></exception>
         public TargetDatabase(string targetIdentifier, string connectionString, LogLevel level = LogLevel.Warn) : base(targetIdentifier)
         {
-            this.connectionString = connectionString;
+            this._connectionString = connectionString;
             LogLevel = level;
             Validate();
         }
@@ -228,11 +245,11 @@ namespace Logging
 
         private void Validate()
         {
-            Helper.ThrowIfNullOrEmpty(connectionString, nameof(connectionString));
+            Helper.ThrowIfNullOrEmpty(_connectionString, nameof(_connectionString));
 
-            connectionString = ValidateConnectionString(connectionString);
+            _connectionString = ValidateConnectionString(_connectionString);
         }
-        private string ValidateConnectionString(string connectionString)
+        private static string ValidateConnectionString(string connectionString)
         {
             var builder = new SqlConnectionStringBuilder(connectionString);
 
@@ -248,7 +265,7 @@ namespace Logging
                     builder.IntegratedSecurity = true;
             }
 
-            builder.ConnectTimeout = SQLCONNECTION_DEFAULT_TIMEOUT;
+            builder.ConnectTimeout = SqlConnectionDefaultTimeout;
             return builder.ConnectionString;
         }
 
@@ -256,7 +273,7 @@ namespace Logging
         {
             try
             {
-                using (var connection = new SqlConnection(connectionString))
+                using (var connection = new SqlConnection(_connectionString))
                 {
                     var command = new SqlCommand("INSERT INTO LogEntries (App, Machine, Username, Timestamp, Level, Category, Message) VALUES (@App, @Machine, @Username, @Timestamp, @Level, @Category, @Message)", connection);
                     command.Parameters.AddWithValue("@App", General.AppName);
@@ -264,12 +281,15 @@ namespace Logging
                     command.Parameters.AddWithValue("@Username", General.UserName);
                     command.Parameters.AddWithValue("@Timestamp", entry.Timestamp);
                     command.Parameters.AddWithValue("@Level", entry.Level.ToString());
-                    command.Parameters.AddWithValue("@Message", entry.formattedMessage);
+                    command.Parameters.AddWithValue("@Message", entry.FormattedMessage);
                     connection.Open();
                     command.ExecuteNonQuery();
                 }
             }
-            catch { }
+            catch
+            {
+                // ignored
+            }
         }
 
 
@@ -277,7 +297,7 @@ namespace Logging
         /// Returns the DDL for the log table.
         /// </summary>
         /// <returns></returns>
-        public static string GetLogTableDDL() => @"
+        public static string GetLogTableDdl() => @"
 CREATE TABLE dbo.LogEntries
 (
 	LogEntriesID	int				PRIMARY KEY IDENTITY(1, 1),
@@ -294,8 +314,8 @@ CREATE TABLE dbo.LogEntries
         /// <inheritdoc cref="Target.ToString"/>
         public override string ToString()
         {
-            var builder = new SqlConnectionStringBuilder(connectionString);
-            return $"{targetIdentifier}: {builder.DataSource},{builder.InitialCatalog}";
+            var builder = new SqlConnectionStringBuilder(_connectionString);
+            return $"{TargetIdentifier}: {builder.DataSource},{builder.InitialCatalog}";
         }
     }
 
@@ -322,10 +342,13 @@ CREATE TABLE dbo.LogEntries
                 using (var eventLog = new EventLog("Application"))
                 {
                     eventLog.Source = General.AppName;
-                    eventLog.WriteEntry(entry.formattedMessage, entry.Level.GetEventLogEntryType());
+                    eventLog.WriteEntry(entry.FormattedMessage, entry.Level.GetEventLogEntryType());
                 }
             }
-            catch { }
+            catch
+            {
+                // ignored
+            }
         }
     }
 
@@ -354,7 +377,7 @@ CREATE TABLE dbo.LogEntries
 
         internal override void Log(LogEntry entry)
         {
-            Console.WriteLine(entry.fullFormattedMessage);
+            Console.WriteLine(entry.FullFormattedMessage);
         }
     }
 
@@ -376,7 +399,7 @@ CREATE TABLE dbo.LogEntries
 
         internal override void Log(LogEntry entry)
         {
-            Trace.WriteLine(entry.fullFormattedMessage);
+            Trace.WriteLine(entry.FullFormattedMessage);
         }
     }
 
@@ -461,16 +484,19 @@ CREATE TABLE dbo.LogEntries
         {
             _mailMessage.Subject = $"{General.AppName} | {entry.Level}";
             _mailMessage.Priority = entry.Level >= LogLevel.Error ? MailPriority.High : MailPriority.Normal;
-            _mailMessage.Body = entry.formattedMessage;
+            _mailMessage.Body = entry.FormattedMessage;
 
             try
             {
                 _smtpClient.Send(_mailMessage);
             }
-            catch { }
+            catch
+            {
+                // ignored
+            }
         }
 
         /// <inheritdoc cref="Target.ToString"/>
-        public override string ToString() => $"{targetIdentifier}: {_smtpClient.Host}:{_smtpClient.Port}";
+        public override string ToString() => $"{TargetIdentifier}: {_smtpClient.Host}:{_smtpClient.Port}";
     }
 }

@@ -8,33 +8,34 @@ namespace Logging
     {
         public string Parse(object message)
         {
-            if (message is null)
-                return string.Empty;
-
-            if (message is Exception ex)
-                return ParseException(ex);
-
-            if (message is SqlCommand command)
-                return ParseSqlCommand(command);
-
-            return message.ToString();
+            switch (message)
+            {
+                case null:
+                    return string.Empty;
+                case Exception ex:
+                    return ParseException(ex);
+                case SqlCommand command:
+                    return ParseSqlCommand(command);
+                default:
+                    return message.ToString();
+            }
         }
 
-        private string ParseException(Exception exception)
+        private static string ParseException(Exception exception)
         {
             var builder = new StringBuilder();
-            builder.AppendLine(exception.Message);
+            builder.AppendException(exception);
 
             while (exception.InnerException != null)
             {
                 exception = exception.InnerException;
-                builder.AppendLine(exception.Message);
+                builder.AppendException(exception);
             }
 
             return builder.ToString();
         }
 
-        private string ParseSqlCommand(SqlCommand command)
+        private static string ParseSqlCommand(SqlCommand command)
         {
             var builder = new StringBuilder();
 
@@ -46,7 +47,7 @@ namespace Logging
             return builder.ToString();
         }
 
-        private void ParseSqlParameters(SqlParameterCollection parameters, StringBuilder builder)
+        private static void ParseSqlParameters(SqlParameterCollection parameters, StringBuilder builder)
         {
             foreach (SqlParameter param in parameters)
             {

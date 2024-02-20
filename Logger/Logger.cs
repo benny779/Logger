@@ -10,13 +10,13 @@ namespace Logging
     /// </summary>
     public class Logger : ILogger
     {
-        private static readonly Logger _instance = new Logger();
+        private static readonly Logger LoggerInstance = new Logger();
 
         private readonly Dictionary<string, Target> _targets = new Dictionary<string, Target>();
         private bool _enabled = true;
         private string _timeFormat = "yyyy-MM-dd HH:mm:ss.fff"; //It should also be updated in the SetTimeFormat summary
         private bool _parallelismEnabled = true;
-        private bool _logHistoryEnabled = false;
+        private bool _logHistoryEnabled;
         private LimitedList<string> _logs;
         private IMessageParser _messageParser = new MessageParser();
 
@@ -25,9 +25,9 @@ namespace Logging
         /// <summary>
         /// Returns an instance of the <see cref="Logger"/> class.
         /// </summary>
-        /// <remarks>By default there are no targets. Use <see cref="AddTarget(Target)"/> to add.</remarks>
+        /// <remarks>By default, there are no targets. Use <see cref="AddTarget(Target)"/> to add.</remarks>
         /// <returns></returns>
-        public static Logger GetLogger() => _instance;
+        public static Logger GetLogger() => LoggerInstance;
 
         /// <summary>
         /// <inheritdoc cref="GetLogger()"/>
@@ -37,8 +37,8 @@ namespace Logging
         /// <returns></returns>
         public static Logger GetLogger(IMessageParser messageParser)
         {
-            _instance._messageParser = messageParser;
-            return _instance;
+            LoggerInstance._messageParser = messageParser;
+            return LoggerInstance;
         }
 
 
@@ -69,11 +69,11 @@ namespace Logging
             InternalLog(entry);
 
             if (_logHistoryEnabled)
-                _logs.Add(entry.fullFormattedMessage);
+                _logs.Add(entry.FullFormattedMessage);
         }
         private void InternalLog(LogEntry entry)
         {
-            var targetsToLog = _targets.Where(t => t.Value.enabled && entry.Level >= t.Value.LogLevel);
+            var targetsToLog = _targets.Where(t => t.Value.Enabled && entry.Level >= t.Value.LogLevel);
 
             if (_parallelismEnabled)
                 Parallel.ForEach(targetsToLog, target => target.Value.Log(entry));
@@ -83,14 +83,14 @@ namespace Logging
 
         private void FormatLogEntryMessage(LogEntry entry)
         {
-            entry.formattedMessage = _messageParser.Parse(entry.Message);
-            entry.fullFormattedMessage = GetMessageString(entry);
+            entry.FormattedMessage = _messageParser.Parse(entry.Message);
+            entry.FullFormattedMessage = GetMessageString(entry);
         }
         private string GetMessageString(LogEntry entry)
         {
             string timestamp = entry.Timestamp.ToString(_timeFormat);
             string levelString = entry.Level.GetShortName();
-            string messageString = entry.formattedMessage ?? _messageParser.Parse(entry.Message);
+            string messageString = entry.FormattedMessage ?? _messageParser.Parse(entry.Message);
 
             return $"{timestamp} [{levelString}] {messageString}";
         }
@@ -122,11 +122,11 @@ namespace Logging
             if (target is null)
                 throw new ArgumentNullException(nameof(target));
 
-            var targetExist = _targets.ContainsKey(target.targetIdentifier);
+            var targetExist = _targets.ContainsKey(target.TargetIdentifier);
             if (!targetExist)
-                _targets.Add(target.targetIdentifier, target);
+                _targets.Add(target.TargetIdentifier, target);
             else
-                _targets[target.targetIdentifier] = target;
+                _targets[target.TargetIdentifier] = target;
 
             return this;
         }
@@ -155,13 +155,13 @@ namespace Logging
         /// </summary>
         /// <param name="targetIdentifier"></param>
         /// <exception cref="ArgumentNullException"></exception>
-        public void EnableTarget(string targetIdentifier) => TargetAction(targetIdentifier, t => t.enabled = true);
+        public void EnableTarget(string targetIdentifier) => TargetAction(targetIdentifier, t => t.Enabled = true);
         /// <summary>
         /// Sets the target state to Disabled.
         /// </summary>
         /// <param name="targetIdentifier"></param>
         /// <exception cref="ArgumentNullException"></exception>
-        public void DisableTarget(string targetIdentifier) => TargetAction(targetIdentifier, t => t.enabled = false);
+        public void DisableTarget(string targetIdentifier) => TargetAction(targetIdentifier, t => t.Enabled = false);
 
         /// <summary>
         /// Sets the specified target minimum severity level.

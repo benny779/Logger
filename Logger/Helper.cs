@@ -30,7 +30,7 @@ namespace Logging
     /// </summary>
     public class TimeFormatBuilder
     {
-        private readonly StringBuilder builder = new StringBuilder();
+        private readonly StringBuilder _builder = new StringBuilder();
 
         /// <summary>
         /// Add a custom string.
@@ -39,7 +39,7 @@ namespace Logging
         /// <returns></returns>
         public TimeFormatBuilder Add(string part)
         {
-            builder.Append(part);
+            _builder.Append(part);
             return this;
         }
 
@@ -108,12 +108,12 @@ namespace Logging
         /// <returns></returns>
         public TimeFormatBuilder Clear()
         {
-            builder.Clear();
+            _builder.Clear();
             return this;
         }
 
 
         /// <inheritdoc cref="StringBuilder.ToString()"/>
-        public override string ToString() => builder.ToString();
+        public override string ToString() => _builder.ToString();
     }
 }
